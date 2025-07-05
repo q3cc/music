@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GD音乐台 - 在线音乐播放器</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边导航 -->
+        <nav class="sidebar">
+            <div class="logo">
+                <h1>GD音乐台</h1>
+            </div>
+            <ul class="nav-links">
+                <li class="active" data-page="home"><i class="fas fa-home"></i> 首页</li>
+                <li data-page="favorites"><i class="fas fa-heart"></i> 我的收藏</li>
+                <li data-page="listen-together"><i class="fas fa-users"></i> 一起听</li>
+            </ul>
+            <div class="room-status hidden">
+                <div class="room-info">
+                    <h3>房间号: <span id="room-id">------</span></h3>
+                    <p><i class="fas fa-users"></i> <span id="room-users">1</span> 人在线</p>
+                </div>
+                <button id="leave-room" class="btn btn-danger">退出房间</button>
+            </div>
+        </nav>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 首页 -->
+            <section id="home" class="page active">
+                <div class="search-container">
+                    <div class="search-bar">
+                        <input type="text" id="search-input" placeholder="搜索歌曲、歌手或专辑...">
+                        <button id="search-btn"><i class="fas fa-search"></i></button>
+                    </div>
+                    <div class="source-selector">
+                        <select id="source-select">
+                            <option value="netease">网易云音乐</option>
+                            <option value="tencent">QQ音乐</option>
+                            <option value="migu">咪咕音乐</option>
+                            <option value="kugou">酷狗音乐</option>
+                            <option value="kuwo">酷我音乐</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="search-results">
+                    <h2>搜索结果</h2>
+                    <div id="results-container" class="music-list"></div>
+                </div>
+
+                <div class="recommendations">
+                    <h2>推荐歌曲</h2>
+                    <div id="recommendations-container" class="music-list">
+                        <div class="loading">载入推荐中...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 收藏页面 -->
+            <section id="favorites" class="page">
+                <h2>我的收藏</h2>
+                <div id="favorites-container" class="music-list">
+                    <div class="empty-message">暂无收藏歌曲</div>
+                </div>
+            </section>
+
+            <!-- 一起听页面 -->
+            <section id="listen-together" class="page">
+                <h2>一起听</h2>
+                <div class="listen-together-container">
+                    <div class="create-room">
+                        <h3>创建房间</h3>
+                        <p>创建一个房间，邀请好友一起听歌</p>
+                        <button id="create-room-btn" class="btn btn-primary">创建房间</button>
+                    </div>
+                    <div class="join-room">
+                        <h3>加入房间</h3>
+                        <p>输入房间号加入好友的房间</p>
+                        <div class="room-input">
+                            <input type="text" id="room-input" placeholder="输入6位房间号" maxlength="6">
+                            <button id="join-room-btn" class="btn btn-primary">加入房间</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 播放器控制区 -->
+        <div class="player-container">
+            <div class="current-track">
+                <div class="album-thumbnail">
+                    <img id="current-thumbnail" src="https://via.placeholder.com/60" alt="专辑封面">
+                </div>
+                <div class="track-info">
+                    <div id="current-title">未播放</div>
+                    <div id="current-artist">--</div>
+                </div>
+                <div class="favorite-btn">
+                    <i id="favorite-icon" class="far fa-heart"></i>
+                </div>
+            </div>
+
+            <div class="player-controls">
+                <div class="progress-container">
+                    <span id="current-time">0:00</span>
+                    <div class="progress-bar">
+                        <div id="progress"></div>
+                    </div>
+                    <span id="total-time">0:00</span>
+                </div>
+                <div class="control-buttons">
+                    <button id="prev-btn"><i class="fas fa-step-backward"></i></button>
+                    <button id="play-btn"><i class="fas fa-play"></i></button>
+                    <button id="next-btn"><i class="fas fa-step-forward"></i></button>
+                    <div class="volume-control">
+                        <i class="fas fa-volume-up"></i>
+                        <input type="range" id="volume-slider" min="0" max="100" value="100">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 播放详情页/歌词页 -->
+        <div id="player-details" class="player-details">
+            <div class="details-header">
+                <button id="close-details"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="details-content">
+                <div class="album-art">
+                    <img id="details-thumbnail" src="https://via.placeholder.com/300" alt="专辑封面">
+                </div>
+                <div class="track-details">
+                    <h2 id="details-title">未播放</h2>
+                    <h3 id="details-artist">--</h3>
+                    <p id="details-album">--</p>
+                </div>
+                <div class="lyrics-container">
+                    <div id="lyrics">
+                        <p class="no-lyrics">暂无歌词</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
