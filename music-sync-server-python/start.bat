@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul 2>&1
 REM Music Sync Server - Python版本启动脚本 (Windows)
 
 title Music Sync Server - Python
