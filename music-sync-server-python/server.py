@@ -63,6 +63,12 @@ class Room:
         if current_time is not None:
             self.current_time = current_time
         self.last_update = time.time()
+        
+        # 调试日志
+        if DEBUG:
+            track_name = track.get('name') if track else self.current_track.get('name') if self.current_track else 'Unknown'
+            track_source = track.get('source') if track else self.current_track.get('source') if self.current_track else 'Unknown'
+            print(f'[DEBUG] 房间 {self.id} 播放状态更新: {track_name} (来源: {track_source}), 播放: {self.is_playing}, 时间: {self.current_time}s')
     
     def get_play_state(self):
         """获取当前播放状态"""
@@ -299,7 +305,7 @@ def on_track_change(data):
         'current_time': 0
     }, room=room_id, include_self=False)
     
-    print(f'房间 {room_id} 切换歌曲: {track.get("name", "Unknown")}')
+    print(f'房间 {room_id} 切换歌曲: {track.get("name", "Unknown")} (来源: {track.get("source", "未知")})')
 
 
 @socketio.on('play')

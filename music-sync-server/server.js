@@ -112,6 +112,7 @@ class Room {
         
         utils.log('debug', `房间 ${this.id} 播放状态更新`, {
             track: track?.name || this.currentTrack?.name,
+            source: track?.source || this.currentTrack?.source,
             isPlaying: this.isPlaying,
             currentTime: this.currentTime
         });
@@ -293,7 +294,7 @@ io.on('connection', (socket) => {
             currentTime: 0
         });
 
-        console.log(`房间 ${roomId} 切换歌曲:`, track.name);
+        console.log(`房间 ${roomId} 切换歌曲: ${track.name} (来源: ${track.source || '未知'})`);
     });
 
     // 播放
