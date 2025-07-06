@@ -43,8 +43,8 @@
 
 1. **克隆项目**
    ```bash
-   git clone 
-   cd gd-music-platform
+   git clone https://github.com/q3cc/music.git
+   cd music
    ```
 
 2. **启动本地服务器**
