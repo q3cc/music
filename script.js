@@ -8,6 +8,10 @@ let roomId = null;
 let socket = null;
 let isRoomHost = false;
 let lastSyncTime = 0;
+let isDragging = false;
+
+// 配置常量
+const API_BASE_URL = 'https://music-api.gdstudio.xyz/api.php';
 
 // 缓存相关变量
 let searchCache = new Map(); // 搜索结果缓存
@@ -70,6 +74,8 @@ const closePlaylist = document.getElementById('close-playlist');
 const playlistTracks = document.getElementById('playlist-tracks');
 const playlistCount = document.getElementById('playlist-count');
 const clearPlaylist = document.getElementById('clear-playlist');
+const toastContainer = document.getElementById('toast-container');
+const loadingOverlay = document.getElementById('loading-overlay');
 
 // 移动端元素
 const mobileMenuBtn = document.getElementById('mobile-menu-btn');
@@ -145,7 +151,7 @@ function init() {
     
     // 音频事件
     audioPlayer.addEventListener('timeupdate', updateProgress);
-    audioPlayer.addEventListener('ended', handleTrackEnd);
+    audioPlayer.addEventListener('ended', handleDragEnd);
     audioPlayer.addEventListener('loadedmetadata', () => {
         totalTimeEl.textContent = formatTime(audioPlayer.duration);
     });
@@ -924,8 +930,6 @@ function seekTo(e) {
 }
 
 // 进度条拖动功能
-let isDragging = false;
-
 // 格式化时间
 function formatTime(seconds) {
     const mins = Math.floor(seconds / 60);
@@ -1095,21 +1099,8 @@ function clearPlaylistTracks() {
         currentIndex = 0;
         updatePlaylistDisplay();
         showToast('播放列表已清空', 'success');
-        
-        if (currentTime >= time && currentTime < nextTime) {
-            activeIndex = index;
-        }
-        
-        line.classList.remove('active');
-    });
-    
-    if (activeIndex !== -1) {
-        lines[activeIndex].classList.add('active');
-        lines[activeIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 }
-
-
 
 // 显示音乐列表
 function displayMusicList(tracks, container, loadMore = false) {
@@ -1404,6 +1395,7 @@ function leaveRoom() {
     showToast('已退出房间', 'info');
 }
 
+//一起听连接地址
 function connectToRoom() {
     // 连接到Socket.io服务器
     socket = io('http://localhost:3000'); // 根据实际服务器地址修改
