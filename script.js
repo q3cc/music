@@ -12,6 +12,7 @@ let repeatMode = 'off'; // off, one, all
 let isShuffled = false;
 let originalPlaylist = [];
 let isSocketConnected = false; // 连接状态标记
+let currentServerUrl = null; // 当前连接的服务器地址
 
 // 音质设置
 let currentQuality = '999';
@@ -35,6 +36,20 @@ let isProcessingImages = false;
 
 // API 配置
 const API_BASE_URL = 'https://music-api.gdstudio.xyz/api.php';
+
+// 同步服务器配置 - 搭建者可以在这里修改服务器地址
+const SYNC_SERVER_CONFIG = {
+    // 默认服务器地址 - 可以修改为您的服务器地址
+    defaultServers: [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        // 如果您部署在其他地址，请在这里添加，例如：
+        // 'http://your-server.com:3000',
+        // 'https://your-server.com',
+    ],
+    // 是否允许用户手动输入服务器地址
+    allowCustomServer: true
+};
 
 // 音乐源配置
 const MUSIC_SOURCES = {
@@ -100,6 +115,13 @@ const clearPlaylist = document.getElementById('clear-playlist');
 const toastContainer = document.getElementById('toast-container');
 const loadingOverlay = document.getElementById('loading-overlay');
 
+// 服务器连接相关元素
+const statusIndicator = document.getElementById('status-indicator');
+const statusText = document.getElementById('status-text');
+const serverConfig = document.getElementById('server-config');
+const serverUrlInput = document.getElementById('server-url-input');
+const connectServerBtn = document.getElementById('connect-server-btn');
+
 // 移动端元素
 const mobileMenuBtn = document.getElementById('mobile-menu-btn');
 const mobileSearchBtn = document.getElementById('mobile-search-btn');
@@ -123,6 +145,14 @@ function init() {
     
     // 初始化房间UI状态
     updateRoomUI();
+    
+    // 初始化服务器连接（在一起听页面时才连接）
+    if (SYNC_SERVER_CONFIG.defaultServers.length > 0) {
+        // 延迟1秒后尝试连接，避免页面加载时的阻塞
+        setTimeout(() => {
+            initServerConnection();
+        }, 1000);
+    }
     
     // 初始化音质设置
     if (qualitySelect) {
@@ -220,6 +250,14 @@ function setupEventListeners() {
     createRoomBtn.addEventListener('click', createRoom);
     joinRoomBtn.addEventListener('click', joinRoom);
     leaveRoomBtn.addEventListener('click', leaveRoom);
+    
+    // 服务器连接功能
+    connectServerBtn.addEventListener('click', connectToCustomServer);
+    serverUrlInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            connectToCustomServer();
+        }
+    });
     
     // 播放列表功能
     playlistBtn.addEventListener('click', showPlaylist);
@@ -1279,38 +1317,67 @@ function leaveRoom() {
     roomId = null;
     isRoomHost = false;
     isSocketConnected = false;
+    currentServerUrl = null;
     
     roomStatus.classList.add('hidden');
     document.querySelector('.create-room').style.display = 'block';
     document.querySelector('.join-room').style.display = 'block';
     roomInput.value = '';
     
+    // 重置服务器状态
+    updateServerStatus('disconnected', '未连接');
+    hideServerConfig();
     updateRoomUI();
     showToast('已退出房间', 'info');
 }
 
 function connectToRoom() {
-    // 尝试连接到可能的服务器端口
-    const serverPorts = [3000, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3008, 3009];
-    let currentPortIndex = 0;
+    // 首先尝试连接到默认服务器
+    tryConnectToServers(SYNC_SERVER_CONFIG.defaultServers);
+}
+
+function tryConnectToServers(serverUrls, customUrl = null) {
+    const allUrls = customUrl ? [customUrl] : [...serverUrls];
+    let currentIndex = 0;
     
-    function tryConnect() {
-        const port = serverPorts[currentPortIndex];
-        const serverUrl = `http://localhost:${port}`;
+    updateServerStatus('connecting', '正在连接服务器...');
+    
+    function tryNext() {
+        if (currentIndex >= allUrls.length) {
+            // 所有服务器都连接失败
+            updateServerStatus('disconnected', '连接失败');
+            if (SYNC_SERVER_CONFIG.allowCustomServer) {
+                showServerConfig();
+            } else {
+                showToast('无法连接到同步服务器', 'error');
+            }
+            return;
+        }
+        
+        const serverUrl = allUrls[currentIndex];
         console.log(`尝试连接到: ${serverUrl}`);
         
+        // 如果已有连接，先断开
+        if (socket) {
+            socket.disconnect();
+            socket = null;
+        }
+        
         socket = io(serverUrl, {
-            timeout: 3000, // 3秒连接超时
+            timeout: 3000,
             autoConnect: true
         });
         
-        // 设置连接状态监听
+        // 连接成功
         socket.on('connect', () => {
             isSocketConnected = true;
+            currentServerUrl = serverUrl;
             console.log(`Socket连接成功: ${serverUrl}`);
+            updateServerStatus('connected', `已连接到: ${serverUrl}`);
+            hideServerConfig();
             updateRoomUI();
             
-            // 连接成功后发送房间请求
+            // 发送房间请求
             if (isRoomHost) {
                 socket.emit('create-room', {
                     roomId,
@@ -1322,30 +1389,71 @@ function connectToRoom() {
             }
         });
         
+        // 连接断开
         socket.on('disconnect', () => {
             isSocketConnected = false;
             console.log('Socket连接断开');
+            updateServerStatus('disconnected', '连接已断开');
             updateRoomUI();
         });
         
+        // 连接错误
         socket.on('connect_error', (error) => {
-            isSocketConnected = false;
-            console.error(`Socket连接错误 (${serverUrl}):`, error);
-            
-            // 尝试下一个端口
-            currentPortIndex++;
-            if (currentPortIndex < serverPorts.length) {
-                setTimeout(tryConnect, 500); // 0.5秒后尝试下一个端口
-            } else {
-                showToast('无法连接到任何同步服务器，请确保服务器已启动', 'error');
-                updateRoomUI();
-            }
+            console.error(`连接错误 (${serverUrl}):`, error);
+            currentIndex++;
+            setTimeout(tryNext, 500);
         });
         
         setupSocketEvents();
     }
     
-    tryConnect();
+    tryNext();
+}
+
+function connectToCustomServer() {
+    const customUrl = serverUrlInput.value.trim();
+    if (!customUrl) {
+        showToast('请输入服务器地址', 'error');
+        return;
+    }
+    
+    // 验证URL格式
+    try {
+        new URL(customUrl);
+    } catch (e) {
+        showToast('请输入有效的服务器地址', 'error');
+        return;
+    }
+    
+    connectServerBtn.disabled = true;
+    connectServerBtn.textContent = '连接中...';
+    
+    tryConnectToServers([], customUrl);
+    
+    // 5秒后重置按钮状态
+    setTimeout(() => {
+        connectServerBtn.disabled = false;
+        connectServerBtn.textContent = '连接';
+    }, 5000);
+}
+
+function updateServerStatus(status, message) {
+    statusIndicator.className = `status-indicator ${status}`;
+    statusText.textContent = message;
+}
+
+function showServerConfig() {
+    serverConfig.classList.remove('hidden');
+}
+
+function hideServerConfig() {
+    serverConfig.classList.add('hidden');
+}
+
+// 初始化时尝试连接
+function initServerConnection() {
+    updateServerStatus('connecting', '正在连接服务器...');
+    tryConnectToServers(SYNC_SERVER_CONFIG.defaultServers);
 }
 
 // 更新房间UI状态
@@ -1353,6 +1461,8 @@ function updateRoomUI() {
     const createRoomBtn = document.getElementById('create-room-btn');
     const joinRoomBtn = document.getElementById('join-room-btn');
     const roomInput = document.getElementById('room-input');
+    
+    if (!createRoomBtn || !joinRoomBtn || !roomInput) return;
     
     if (isSocketConnected) {
         // 连接正常，启用按钮
@@ -1366,8 +1476,14 @@ function updateRoomUI() {
         createRoomBtn.disabled = true;
         joinRoomBtn.disabled = true;
         roomInput.disabled = true;
-        createRoomBtn.textContent = '服务器连接中...';
-        joinRoomBtn.textContent = '服务器连接中...';
+        
+        if (currentServerUrl) {
+            createRoomBtn.textContent = '重新连接中...';
+            joinRoomBtn.textContent = '重新连接中...';
+        } else {
+            createRoomBtn.textContent = '等待连接服务器';
+            joinRoomBtn.textContent = '等待连接服务器';
+        }
     }
 }
 

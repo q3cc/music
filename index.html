@@ -116,6 +116,30 @@
             <!-- 一起听页面 -->
             <section id="listen-together" class="page">
                 <h2>一起听</h2>
+                
+                <!-- 服务器连接状态 -->
+                <div class="server-status" id="server-status">
+                    <div class="status-indicator" id="status-indicator">
+                        <i class="fas fa-circle"></i>
+                        <span id="status-text">正在连接服务器...</span>
+                    </div>
+                    <div class="server-config hidden" id="server-config">
+                        <h4>服务器配置</h4>
+                        <p>无法连接到默认服务器，请输入您的服务器地址：</p>
+                        <div class="server-input">
+                            <input type="text" id="server-url-input" placeholder="http://your-server.com:3000" 
+                                   value="http://localhost:3000">
+                            <button id="connect-server-btn" class="btn btn-secondary">连接</button>
+                        </div>
+                        <div class="server-help">
+                            <small>
+                                示例：http://localhost:3000 或 https://your-domain.com<br>
+                                请确保服务器已启动并且地址正确
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="listen-together-container">
                     <div class="create-room">
                         <h3>创建房间</h3>

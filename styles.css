@@ -2964,3 +2964,132 @@ body {
         padding-right: max(0px, env(safe-area-inset-right));
     }
 }
+
+/* 服务器状态样式 */
+.server-status {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 24px;
+    backdrop-filter: blur(20px);
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.status-indicator i {
+    font-size: 12px;
+    transition: color var(--duration-normal) var(--ease-out-quart);
+}
+
+.status-indicator.connected i {
+    color: #10b981;
+    animation: pulse 2s infinite;
+}
+
+.status-indicator.connecting i {
+    color: #f59e0b;
+    animation: blink 1s infinite;
+}
+
+.status-indicator.disconnected i {
+    color: #ef4444;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+}
+
+.server-config {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 16px;
+    margin-top: 16px;
+}
+
+.server-config h4 {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.server-config p {
+    margin: 0 0 16px 0;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.server-input {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.server-input input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    color: var(--text-primary);
+    font-size: 14px;
+    transition: all var(--duration-normal) var(--ease-out-quart);
+}
+
+.server-input input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+}
+
+.server-input input::placeholder {
+    color: var(--text-muted);
+}
+
+.server-help {
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+.btn-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* 移动端服务器状态调整 */
+@media (max-width: 768px) {
+    .server-input {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .server-input input {
+        width: 100%;
+    }
+}
