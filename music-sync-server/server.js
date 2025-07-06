@@ -476,9 +476,10 @@ app.use((req, res) => {
 });
 
 // 启动服务器
-server.listen(CONFIG.PORT, () => {
+server.listen(CONFIG.PORT, '127.0.0.1', () => {
     utils.log('info', `Music Sync Server 启动成功`, {
         port: CONFIG.PORT,
+        host: '127.0.0.1',
         environment: CONFIG.NODE_ENV,
         pid: process.pid
     });
