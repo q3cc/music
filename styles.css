@@ -1486,55 +1486,262 @@ body {
     color: var(--text-muted);
 }
 
+/* 歌词容器样式 - 重新设计 */
 .lyrics-container {
     width: 100%;
-    max-width: 700px;
+    max-width: 800px;
     text-align: center;
     margin-top: 32px;
-}
-
-#lyrics {
-    line-height: 3;
-    font-size: 18px;
-    max-height: 400px;
-    overflow-y: auto;
-    padding: 32px;
-    background: var(--glass-bg);
-    border-radius: var(--radius-2xl);
-    border: 1px solid var(--border-color);
-    backdrop-filter: blur(20px);
-}
-
-#lyrics p {
-    margin-bottom: 20px;
-    transition: all var(--duration-slow) var(--ease-out-quart);
-    color: var(--text-muted);
-    cursor: pointer;
-    padding: 12px 20px;
-    border-radius: var(--radius-lg);
     position: relative;
 }
 
+#lyrics {
+    line-height: 2.8;
+    font-size: 16px;
+    max-height: 450px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 40px 24px 60px;
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.05) 0%, 
+        rgba(255, 255, 255, 0.02) 100%);
+    border-radius: var(--radius-2xl);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(30px);
+    position: relative;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+#lyrics::-webkit-scrollbar {
+    display: none;
+}
+
+/* 歌词渐变蒙版效果 */
+#lyrics::before,
+#lyrics::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 40px;
+    pointer-events: none;
+    z-index: 10;
+}
+
+#lyrics::before {
+    top: 0;
+    background: linear-gradient(to bottom, 
+        rgba(13, 13, 13, 0.8) 0%, 
+        rgba(13, 13, 13, 0.4) 50%,
+        transparent 100%);
+}
+
+#lyrics::after {
+    bottom: 0;
+    background: linear-gradient(to top, 
+        rgba(13, 13, 13, 0.8) 0%, 
+        rgba(13, 13, 13, 0.4) 50%,
+        transparent 100%);
+}
+
+/* 歌词行样式 - 现代化设计 */
+#lyrics p {
+    margin: 0;
+    padding: 16px 32px;
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    color: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    border-radius: var(--radius-xl);
+    position: relative;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    line-height: 1.8;
+    transform: scale(0.95);
+    opacity: 0.6;
+    backdrop-filter: blur(5px);
+    border: 1px solid transparent;
+}
+
+/* 歌词行悬停效果 */
 #lyrics p:hover {
-    color: var(--text-secondary);
-    background: var(--glass-bg);
+    color: rgba(255, 255, 255, 0.7);
+    transform: scale(0.98);
+    opacity: 0.8;
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
+/* 当前播放歌词样式 - 增强版 */
 #lyrics p.active {
-    color: var(--primary-color);
-    font-size: 24px;
+    color: #ffffff;
+    font-size: 20px;
     font-weight: 600;
-    background: var(--glass-bg);
-    border: 1px solid var(--primary-color);
-    transform: scale(1.02);
-    box-shadow: var(--shadow-glow);
+    transform: scale(1.05);
+    opacity: 1;
+    background: linear-gradient(135deg, 
+        rgba(var(--primary-rgb), 0.15) 0%, 
+        rgba(var(--primary-rgb), 0.05) 100%);
+    border: 1px solid rgba(var(--primary-rgb), 0.3);
+    box-shadow: 
+        0 8px 32px rgba(var(--primary-rgb), 0.2),
+        0 0 20px rgba(var(--primary-rgb), 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    text-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.3);
+    position: relative;
+    z-index: 5;
 }
 
-.no-lyrics {
-    color: var(--text-muted);
+/* 当前歌词的光晕效果 */
+#lyrics p.active::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, 
+        rgba(var(--primary-rgb), 0.3) 0%,
+        rgba(var(--primary-rgb), 0.1) 50%,
+        rgba(var(--primary-rgb), 0.3) 100%);
+    border-radius: var(--radius-xl);
+    filter: blur(8px);
+    z-index: -1;
+    animation: lyricsGlow 3s ease-in-out infinite;
+}
+
+@keyframes lyricsGlow {
+    0%, 100% { 
+        opacity: 0.5;
+        transform: scale(1);
+    }
+    50% { 
+        opacity: 0.8;
+        transform: scale(1.02);
+    }
+}
+
+/* 即将播放的歌词提示 */
+#lyrics p.upcoming {
+    color: rgba(255, 255, 255, 0.6);
+    transform: scale(0.98);
+    opacity: 0.8;
+    background: rgba(var(--primary-rgb), 0.05);
+    border-color: rgba(var(--primary-rgb), 0.1);
+}
+
+/* 已播放歌词样式 */
+#lyrics p.played {
+    color: rgba(255, 255, 255, 0.25);
+    transform: scale(0.92);
+    opacity: 0.4;
+}
+
+/* 无歌词状态 - 美化设计 */
+.no-lyrics, .loading {
+    color: rgba(255, 255, 255, 0.4);
     font-style: italic;
     font-size: 18px;
-    padding: 60px 32px;
+    padding: 80px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    text-align: center;
+}
+
+.no-lyrics i, .loading i {
+    font-size: 32px;
+    margin-bottom: 12px;
+    opacity: 0.6;
+}
+
+.loading {
+    color: rgba(var(--primary-rgb), 0.7);
+}
+
+.loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(var(--primary-rgb), 0.2);
+    border-top: 3px solid rgba(var(--primary-rgb), 0.7);
+    border-radius: 50%;
+    animation: lyricsLoading 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes lyricsLoading {
+    to { transform: rotate(360deg); }
+}
+
+/* 歌词进度指示器 */
+#lyrics.with-progress::after {
+    content: '';
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, 
+        rgba(var(--primary-rgb), 0.3) 0%,
+        rgba(var(--primary-rgb), 0.8) 50%,
+        rgba(var(--primary-rgb), 0.3) 100%);
+    border-radius: 2px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+}
+
+#lyrics:hover.with-progress::after {
+    opacity: 1;
+}
+
+/* 移动端歌词优化 */
+@media (max-width: 768px) {
+    .lyrics-container {
+        max-width: 100%;
+        margin-top: 24px;
+    }
+    
+    #lyrics {
+        padding: 32px 16px 40px;
+        max-height: 350px;
+        font-size: 15px;
+        line-height: 2.5;
+    }
+    
+    #lyrics p {
+        padding: 12px 20px;
+        font-size: 15px;
+    }
+    
+    #lyrics p.active {
+        font-size: 18px;
+        transform: scale(1.02);
+    }
+    
+    .no-lyrics, .loading {
+        padding: 60px 24px;
+        font-size: 16px;
+    }
+}
+
+/* 暗黑模式下的歌词优化 */
+@media (prefers-color-scheme: dark) {
+    #lyrics::before {
+        background: linear-gradient(to bottom, 
+            rgba(0, 0, 0, 0.9) 0%, 
+            rgba(0, 0, 0, 0.5) 50%,
+            transparent 100%);
+    }
+    
+    #lyrics::after {
+        background: linear-gradient(to top, 
+            rgba(0, 0, 0, 0.9) 0%, 
+            rgba(0, 0, 0, 0.5) 50%,
+            transparent 100%);
+    }
 }
 
 /* 增强的玻璃态效果 */
