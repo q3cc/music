@@ -422,15 +422,40 @@ def cleanup_empty_rooms():
             print(f'清理空房间: {room_id}')
 
 
+import socket
+
+def find_available_port(start_port=3000, max_port=3010):
+    """寻找可用的端口"""
+    for port in range(start_port, max_port):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind(('127.0.0.1', port))
+                return port
+        except OSError:
+            continue
+    raise RuntimeError(f"无法找到 {start_port}-{max_port-1} 范围内的可用端口")
+
 if __name__ == '__main__':
     # 启动后台清理任务
     cleanup_thread = threading.Thread(target=cleanup_empty_rooms, daemon=True)
     cleanup_thread.start()
     
-    # 获取端口号
-    port = int(os.environ.get('PORT', 3001))
+    # 获取端口号，如果环境变量未设置则自动寻找可用端口
+    if 'PORT' in os.environ:
+        port = int(os.environ.get('PORT'))
+    else:
+        port = find_available_port()
     
     print(f'Music Sync Server (Python) 启动在端口 {port}')
     
     # 启动服务器
-    socketio.run(app, host='127.0.0.1', port=port, debug=False)
+    try:
+        socketio.run(app, host='127.0.0.1', port=port, debug=False)
+    except OSError as e:
+        if "Address already in use" in str(e):
+            print(f'端口 {port} 被占用，正在寻找其他可用端口...')
+            port = find_available_port(port + 1)
+            print(f'使用端口 {port}')
+            socketio.run(app, host='127.0.0.1', port=port, debug=False)
+        else:
+            raise

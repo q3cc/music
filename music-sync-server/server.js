@@ -476,15 +476,79 @@ app.use((req, res) => {
     res.status(404).json({ error: '接口不存在' });
 });
 
-// 启动服务器
-server.listen(CONFIG.PORT, '127.0.0.1', () => {
-    utils.log('info', `Music Sync Server 启动成功`, {
-        port: CONFIG.PORT,
-        host: '127.0.0.1',
-        environment: CONFIG.NODE_ENV,
-        pid: process.pid
+// 寻找可用端口的函数
+function findAvailablePort(startPort = 3000, maxPort = 3010) {
+    return new Promise((resolve, reject) => {
+        const tryPort = (port) => {
+            if (port >= maxPort) {
+                reject(new Error(`无法找到 ${startPort}-${maxPort-1} 范围内的可用端口`));
+                return;
+            }
+            
+            const testServer = require('net').createServer();
+            testServer.listen(port, '127.0.0.1', () => {
+                testServer.once('close', () => {
+                    resolve(port);
+                });
+                testServer.close();
+            });
+            
+            testServer.on('error', () => {
+                tryPort(port + 1);
+            });
+        };
+        
+        tryPort(startPort);
     });
-});
+}
+
+// 启动服务器
+async function startServer() {
+    let port = CONFIG.PORT;
+    
+    // 如果没有设置环境变量PORT，自动寻找可用端口
+    if (!process.env.PORT) {
+        try {
+            port = await findAvailablePort();
+        } catch (error) {
+            utils.log('error', '无法找到可用端口', { error: error.message });
+            process.exit(1);
+        }
+    }
+    
+    server.listen(port, '127.0.0.1', () => {
+        utils.log('info', `Music Sync Server 启动成功`, {
+            port: port,
+            host: '127.0.0.1',
+            environment: CONFIG.NODE_ENV,
+            pid: process.pid
+        });
+    }).on('error', async (err) => {
+        if (err.code === 'EADDRINUSE') {
+            utils.log('warn', `端口 ${port} 被占用，正在寻找其他可用端口...`);
+            try {
+                const newPort = await findAvailablePort(port + 1);
+                utils.log('info', `使用端口 ${newPort}`);
+                server.listen(newPort, '127.0.0.1', () => {
+                    utils.log('info', `Music Sync Server 启动成功`, {
+                        port: newPort,
+                        host: '127.0.0.1',
+                        environment: CONFIG.NODE_ENV,
+                        pid: process.pid
+                    });
+                });
+            } catch (error) {
+                utils.log('error', '无法找到可用端口', { error: error.message });
+                process.exit(1);
+            }
+        } else {
+            utils.log('error', '服务器启动失败', { error: err.message });
+            process.exit(1);
+        }
+    });
+}
+
+startServer();
 
 // 优雅关闭
 process.on('SIGTERM', () => {

@@ -1290,15 +1290,19 @@ function leaveRoom() {
 }
 
 function connectToRoom() {
-    // 尝试连接到Node.js服务器（端口3000），如果失败则尝试Python服务器（端口3001）
-    const serverUrls = ['http://localhost:3000', 'http://localhost:3001'];
-    let currentServerIndex = 0;
+    // 尝试连接到可能的服务器端口
+    const serverPorts = [3000, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3008, 3009];
+    let currentPortIndex = 0;
     
     function tryConnect() {
-        const serverUrl = serverUrls[currentServerIndex];
+        const port = serverPorts[currentPortIndex];
+        const serverUrl = `http://localhost:${port}`;
         console.log(`尝试连接到: ${serverUrl}`);
         
-        socket = io(serverUrl);
+        socket = io(serverUrl, {
+            timeout: 3000, // 3秒连接超时
+            autoConnect: true
+        });
         
         // 设置连接状态监听
         socket.on('connect', () => {
@@ -1328,10 +1332,10 @@ function connectToRoom() {
             isSocketConnected = false;
             console.error(`Socket连接错误 (${serverUrl}):`, error);
             
-            // 尝试下一个服务器
-            currentServerIndex++;
-            if (currentServerIndex < serverUrls.length) {
-                setTimeout(tryConnect, 1000); // 1秒后尝试下一个服务器
+            // 尝试下一个端口
+            currentPortIndex++;
+            if (currentPortIndex < serverPorts.length) {
+                setTimeout(tryConnect, 500); // 0.5秒后尝试下一个端口
             } else {
                 showToast('无法连接到任何同步服务器，请确保服务器已启动', 'error');
                 updateRoomUI();
