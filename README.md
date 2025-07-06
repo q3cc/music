@@ -1,4 +1,4 @@
-# 🎵 Moring音乐台
+# 🎵 Moring 音乐台
 
 基于 GD Studio 音乐聚合API 的现代化在线音乐播放平台，支持多音乐源搜索与播放。
 
@@ -43,8 +43,8 @@
 
 1. **克隆项目**
    ```bash
-   git clone https://github.com/yourusername/moring-music-platform.git
-   cd moring-music-platform
+   git clone 
+   cd gd-music-platform
    ```
 
 2. **启动本地服务器**
@@ -66,10 +66,6 @@
 3. **访问应用**
    
    打开浏览器访问 `http://localhost:8000`
-
-### 在线体验
-
-直接访问：[Moring音乐台在线版本](https://your-domain.com)
 
 ## 📱 使用说明
 
@@ -126,7 +122,7 @@
 ## 📁 项目结构
 
 ```
-moring-music-platform/
+gd-music-platform/
 ├── index.html          # 主页面
 ├── styles.css          # 样式文件
 ├── script.js           # 主要逻辑
@@ -176,24 +172,6 @@ const QUALITY_OPTIONS = {
 - 添加必要的注释
 - 确保代码在主流浏览器中兼容
 
-## 📝 更新日志
-
-### v2.0.0 (2024-01-XX)
-- 🎨 全新UI设计，采用玻璃态风格
-- ✨ 新增一起听功能
-- 📱 优化移动端体验
-- 🔧 重构代码架构
-
-### v1.5.0 (2023-12-XX)
-- 🔍 新增多音乐源支持
-- 📝 添加歌词显示功能
-- ❤️ 实现收藏功能
-
-### v1.0.0 (2023-11-XX)
-- 🎵 基础播放功能
-- 🔍 搜索功能
-- 📱 响应式设计
-
 ## ⚠️ 免责声明
 
 - 本项目仅供学习交流使用，严禁商业用途
@@ -212,11 +190,6 @@ const QUALITY_OPTIONS = {
 
 本项目采用 [MIT License](LICENSE) 开源协议。
 
-## 📧 联系我们
-
-- 项目地址：[GitHub Repository](https://github.com/yourusername/moring-music-platform)
-- 问题反馈：[Issues](https://github.com/yourusername/moring-music-platform/issues)
-- 邮箱：your.email@example.com
 
 ---
 
