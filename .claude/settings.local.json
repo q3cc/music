@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rg:*)",
+      "Bash(npx create-next-app:*)",
+      "Bash(npx --yes create-next-app@latest gd-music-remake --typescript --tailwind --app --src-dir --import-alias \"@/*\" --no-eslint --turbo=false)",
+      "Bash(mkdir:*)"
+    ],
+    "deny": []
+  }
+}
