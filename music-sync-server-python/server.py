@@ -433,4 +433,4 @@ if __name__ == '__main__':
     print(f'Music Sync Server (Python) 启动在端口 {port}')
     
     # 启动服务器
-    socketio.run(app, host='0.0.0.0', port=port, debug=False)
+    socketio.run(app, host='127.0.0.1', port=port, debug=False)
