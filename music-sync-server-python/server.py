@@ -428,7 +428,7 @@ if __name__ == '__main__':
     cleanup_thread.start()
     
     # 获取端口号
-    port = int(os.environ.get('PORT', 3000))
+    port = int(os.environ.get('PORT', 3001))
     
     print(f'Music Sync Server (Python) 启动在端口 {port}')
     

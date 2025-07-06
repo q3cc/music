@@ -11,6 +11,7 @@ let lastSyncTime = 0;
 let repeatMode = 'off'; // off, one, all
 let isShuffled = false;
 let originalPlaylist = [];
+let isSocketConnected = false; // 连接状态标记
 
 // 音质设置
 let currentQuality = '999';
@@ -119,6 +120,9 @@ function init() {
     
     // 更新播放列表显示
     updatePlaylistDisplay();
+    
+    // 初始化房间UI状态
+    updateRoomUI();
     
     // 初始化音质设置
     if (qualitySelect) {
@@ -1218,6 +1222,12 @@ async function loadTrendingContent(tab) {
 
 // 一起听功能
 function createRoom() {
+    // 检查是否连接到同步服务器
+    if (!isSocketConnected) {
+        showToast('无法连接到同步服务器，请稍后再试', 'error');
+        return;
+    }
+    
     if (!currentTrack) {
         showToast('请先选择一首歌曲进行播放', 'error');
         return;
@@ -1237,6 +1247,12 @@ function createRoom() {
 }
 
 function joinRoom() {
+    // 检查是否连接到同步服务器
+    if (!isSocketConnected) {
+        showToast('无法连接到同步服务器，请稍后再试', 'error');
+        return;
+    }
+    
     const inputId = roomInput.value.trim();
     if (!inputId || inputId.length !== 6) {
         showToast('请输入正确的6位房间号', 'error');
@@ -1257,33 +1273,97 @@ function joinRoom() {
 function leaveRoom() {
     if (socket) {
         socket.disconnect();
+        socket = null;
     }
     
     roomId = null;
     isRoomHost = false;
+    isSocketConnected = false;
     
     roomStatus.classList.add('hidden');
     document.querySelector('.create-room').style.display = 'block';
     document.querySelector('.join-room').style.display = 'block';
     roomInput.value = '';
     
+    updateRoomUI();
     showToast('已退出房间', 'info');
 }
 
 function connectToRoom() {
-    // 连接到Socket.io服务器
-    socket = io('http://localhost:3000'); // 根据实际服务器地址修改
+    // 尝试连接到Node.js服务器（端口3000），如果失败则尝试Python服务器（端口3001）
+    const serverUrls = ['http://localhost:3000', 'http://localhost:3001'];
+    let currentServerIndex = 0;
     
-    setupSocketEvents();
-    
-    if (isRoomHost) {
-        socket.emit('create-room', {
-            roomId,
-            track: currentTrack,
-            currentTime: audioPlayer.currentTime
+    function tryConnect() {
+        const serverUrl = serverUrls[currentServerIndex];
+        console.log(`尝试连接到: ${serverUrl}`);
+        
+        socket = io(serverUrl);
+        
+        // 设置连接状态监听
+        socket.on('connect', () => {
+            isSocketConnected = true;
+            console.log(`Socket连接成功: ${serverUrl}`);
+            updateRoomUI();
+            
+            // 连接成功后发送房间请求
+            if (isRoomHost) {
+                socket.emit('create-room', {
+                    roomId,
+                    track: currentTrack,
+                    currentTime: audioPlayer.currentTime
+                });
+            } else {
+                socket.emit('join-room', { roomId });
+            }
         });
+        
+        socket.on('disconnect', () => {
+            isSocketConnected = false;
+            console.log('Socket连接断开');
+            updateRoomUI();
+        });
+        
+        socket.on('connect_error', (error) => {
+            isSocketConnected = false;
+            console.error(`Socket连接错误 (${serverUrl}):`, error);
+            
+            // 尝试下一个服务器
+            currentServerIndex++;
+            if (currentServerIndex < serverUrls.length) {
+                setTimeout(tryConnect, 1000); // 1秒后尝试下一个服务器
+            } else {
+                showToast('无法连接到任何同步服务器，请确保服务器已启动', 'error');
+                updateRoomUI();
+            }
+        });
+        
+        setupSocketEvents();
+    }
+    
+    tryConnect();
+}
+
+// 更新房间UI状态
+function updateRoomUI() {
+    const createRoomBtn = document.getElementById('create-room-btn');
+    const joinRoomBtn = document.getElementById('join-room-btn');
+    const roomInput = document.getElementById('room-input');
+    
+    if (isSocketConnected) {
+        // 连接正常，启用按钮
+        createRoomBtn.disabled = false;
+        joinRoomBtn.disabled = false;
+        roomInput.disabled = false;
+        createRoomBtn.textContent = '创建房间';
+        joinRoomBtn.textContent = '加入房间';
     } else {
-        socket.emit('join-room', { roomId });
+        // 连接断开，禁用按钮
+        createRoomBtn.disabled = true;
+        joinRoomBtn.disabled = true;
+        roomInput.disabled = true;
+        createRoomBtn.textContent = '服务器连接中...';
+        joinRoomBtn.textContent = '服务器连接中...';
     }
 }
 
